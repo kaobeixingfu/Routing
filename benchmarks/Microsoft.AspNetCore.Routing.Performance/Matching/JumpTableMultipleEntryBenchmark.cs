@@ -14,6 +14,7 @@ namespace Microsoft.AspNetCore.Routing.Matching
         private PathSegment[] _segments;
 
         private JumpTable _linearSearch;
+        private JumpTable _linearSearchAscii;
         private JumpTable _dictionary;
         private JumpTable _ascii;
         private JumpTable _dictionaryLookup;
@@ -47,8 +48,9 @@ namespace Microsoft.AspNetCore.Routing.Matching
             }
 
             _linearSearch = new LinearSearchJumpTable(0, -1, entries.ToArray());
+            _linearSearchAscii = new LinearSearchAsciiJumpTable(0, -1, entries.ToArray());
             _dictionary = new DictionaryJumpTable(0, -1, entries.ToArray());
-            Debug.Assert(AsciiKeyedJumpTable.TryCreate(0, -1, entries, out _ascii));
+            AsciiKeyedJumpTable.TryCreate(0, -1, entries, out _ascii);
             _dictionaryLookup = new DictionaryLookupJumpTable(0, -1, entries.ToArray());
             _customHashTable = new CustomHashTableJumpTable(0, -1, entries.ToArray());
         }
@@ -91,6 +93,21 @@ namespace Microsoft.AspNetCore.Routing.Matching
             for (var i = 0; i < strings.Length; i++)
             {
                 destination = _linearSearch.GetDestination(strings[i], segments[i]);
+            }
+
+            return destination;
+        }
+
+        [Benchmark(OperationsPerInvoke = 100)]
+        public int LinearSearchAscii()
+        {
+            var strings = _strings;
+            var segments = _segments;
+
+            var destination = 0;
+            for (var i = 0; i < strings.Length; i++)
+            {
+                destination = _linearSearchAscii.GetDestination(strings[i], segments[i]);
             }
 
             return destination;

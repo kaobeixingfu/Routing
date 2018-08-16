@@ -2,20 +2,24 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using BenchmarkDotNet.Attributes;
 
 namespace Microsoft.AspNetCore.Routing.Matching
 {
     public class JumpTableSingleEntryBenchmark
     {
-        private JumpTable _table;
+        private JumpTable _default;
+        private JumpTable _ascii;
         private string[] _strings;
         private PathSegment[] _segments;
 
         [GlobalSetup]
         public void Setup()
         {
-            _table = new SingleEntryJumpTable(0, -1, "hello-world", 1);
+            _default = new SingleEntryJumpTable(0, -1, "hello-world", 1);
+            _ascii = new SingleEntryAsciiJumpTable(0, -1, "hello-world", 1);
             _strings = new string[]
             {
                 "index/foo/2",
@@ -61,7 +65,7 @@ namespace Microsoft.AspNetCore.Routing.Matching
         }
 
         [Benchmark(OperationsPerInvoke = 5)]
-        public int Implementation()
+        public int Default()
         {
             var strings = _strings;
             var segments = _segments;
@@ -69,7 +73,22 @@ namespace Microsoft.AspNetCore.Routing.Matching
             var destination = 0;
             for (var i = 0; i < strings.Length; i++)
             {
-                destination = _table.GetDestination(strings[i], segments[i]);
+                destination = _default.GetDestination(strings[i], segments[i]);
+            }
+
+            return destination;
+        }
+
+        [Benchmark(OperationsPerInvoke = 5)]
+        public int Ascii()
+        {
+            var strings = _strings;
+            var segments = _segments;
+
+            var destination = 0;
+            for (var i = 0; i < strings.Length; i++)
+            {
+                destination = _ascii.GetDestination(strings[i], segments[i]);
             }
 
             return destination;

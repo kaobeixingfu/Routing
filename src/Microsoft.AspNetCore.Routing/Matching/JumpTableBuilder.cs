@@ -19,8 +19,15 @@ namespace Microsoft.AspNetCore.Routing.Matching
         // case because parameters don't match a zero-length segment.
         public int ExitDestination { get; set; } = InvalidDestination;
 
+        public bool HasNonAsciiEntry { get; set; }
+
         public void AddEntry(string text, int destination)
         {
+            if (!Ascii.IsAscii(text))
+            {
+                HasNonAsciiEntry |= true;
+            }
+
             _entries.Add((text, destination));
         }
 
@@ -45,10 +52,21 @@ namespace Microsoft.AspNetCore.Routing.Matching
                 return new ZeroEntryJumpTable(DefaultDestination, ExitDestination);
             }
 
+            if (_entries.Count == 1 && !HasNonAsciiEntry)
+            {
+                var entry = _entries[0];
+                return new SingleEntryAsciiJumpTable(DefaultDestination, ExitDestination, entry.text, entry.destination);
+            }
+
             if (_entries.Count == 1)
             {
                 var entry = _entries[0];
                 return new SingleEntryJumpTable(DefaultDestination, ExitDestination, entry.text, entry.destination);
+            }
+
+            if (_entries.Count < 10 && !HasNonAsciiEntry)
+            {
+                return new LinearSearchAsciiJumpTable(DefaultDestination, ExitDestination, _entries.ToArray());
             }
 
             if (_entries.Count < 10)
