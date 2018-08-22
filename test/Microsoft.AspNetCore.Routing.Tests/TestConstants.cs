@@ -1,17 +1,13 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
 namespace Microsoft.AspNetCore.Routing
 {
-    public abstract class EndpointBuilder
+    public static class TestConstants
     {
-        public string DisplayName { get; set; }
-
-        public IList<object> Metadata { get; } = new List<object>();
-
-        public abstract Endpoint Build();
+        internal static readonly RequestDelegate EmptyRequestDelegate = (context) => Task.CompletedTask;
     }
 }
