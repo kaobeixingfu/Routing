@@ -830,6 +830,35 @@ namespace Microsoft.AspNetCore.Routing
             Assert.False(canGenerateLink);
         }
 
+        private class UpperCaseParameterTransform : ParameterTransformer
+        {
+            public override string Transform(string value)
+            {
+                return value?.ToUpperInvariant();
+            }
+        }
+
+        [Fact]
+        public void GetLink_ParameterTransformer()
+        {
+            // Arrange
+            var endpoint = EndpointFactory.CreateRouteEndpoint("{controller:upper-case}/{name}");
+
+            var routeOptions = new RouteOptions();
+            routeOptions.ConstraintMap["upper-case"] = typeof(UpperCaseParameterTransform);
+
+            var services = GetBasicServices();
+            services.AddSingleton(typeof(UpperCaseParameterTransform), new UpperCaseParameterTransform());
+
+            var linkGenerator = CreateLinkGenerator(new[] { endpoint }, routeOptions, services);
+
+            // Act
+            var link = linkGenerator.GetLink(new { controller = "Home", name = "Test" });
+
+            // Assert
+            Assert.Equal("/HOME/Test", link);
+        }
+
         [Fact]
         public void GetLink_InlineConstraints_CompositeConstraint_FromConstructor()
         {
